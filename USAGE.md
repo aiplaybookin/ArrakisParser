@@ -30,7 +30,7 @@
 
 ## Basic Usage
 
-### Using Gemini API (JSON output by default)
+### Using Gemini API
 
 ```bash
 python main.py --pdf document.pdf --api gemini --output-dir output/
@@ -40,19 +40,6 @@ python main.py --pdf document.pdf --api gemini --output-dir output/
 
 ```bash
 python main.py --pdf document.pdf --api sonnet --output-dir output/
-```
-
-### Specify Output Format
-
-```bash
-# JSON output (default) - includes HTML tables and performance metrics
-python main.py --pdf document.pdf --api gemini --output-format json
-
-# Markdown output
-python main.py --pdf document.pdf --api gemini --output-format markdown
-
-# Both JSON and Markdown
-python main.py --pdf document.pdf --api gemini --output-format both
 ```
 
 ## Advanced Options
@@ -83,22 +70,14 @@ python main.py --pdf document.pdf --api gemini --gemini-key YOUR_KEY
 python main.py --pdf document.pdf --api sonnet --sonnet-key YOUR_KEY
 ```
 
-### Disable Index Generation
+## Output Format
 
-```bash
-python main.py --pdf document.pdf --api gemini --no-index
-```
-
-## Output Formats
-
-### JSON Output (Default)
-
-The parser generates:
+The parser generates JSON output with HTML tables:
 
 1. **Individual table files**: `table_N_page_X.json` or `table_N_page_X-Y.json` (for multi-page tables)
 2. **Summary file**: `summary.json` with all tables and aggregate statistics
 
-#### Example JSON File Structure
+### Example JSON File Structure
 
 ```json
 {
@@ -113,7 +92,18 @@ The parser generates:
 }
 ```
 
-#### Summary File Structure
+### HTML Content Features
+
+The parser extracts tables directly as HTML with special support for:
+
+- **Superscripts**: `<sup>` tags for exponents, powers (e.g., `m<sup>2</sup>`, `10<sup>-3</sup>`)
+- **Subscripts**: `<sub>` tags for chemical formulas (e.g., `H<sub>2</sub>O`, `CO<sub>2</sub>`, `H<sub>2</sub>SO<sub>4</sub>`)
+- **Merged cells**: `rowspan` and `colspan` attributes
+- **Proper structure**: `<thead>`, `<tbody>`, `<th>`, `<td>` tags
+- **Chemical formulas**: Accurate representation with subscripts/superscripts
+- **Mathematical expressions**: Scientific notation with proper formatting
+
+### Summary File Structure
 
 ```json
 {
@@ -126,37 +116,6 @@ The parser generates:
     ...
   ]
 }
-```
-
-### Markdown Output
-
-The parser generates:
-
-1. **Individual table files**: `table_N_page_X.md` or `table_N_page_X-Y.md` (for multi-page tables)
-2. **Index file**: `index.md` (unless --no-index is used)
-
-#### Example Markdown File Structure
-
-```markdown
-# Table 1
-
-**Page(s):** 3
-
-## Caption
-
-Table 1: Sample data showing quarterly results
-
-## Table Content
-
-| Quarter | Revenue | Expenses | Profit |
-|---------|---------|----------|--------|
-| Q1      | $100K   | $60K     | $40K   |
-| Q2      | $120K   | $65K     | $55K   |
-
-## Footnotes
-
-* Revenue figures are in USD thousands
-* Expenses include operational costs only
 ```
 
 ## API Comparison

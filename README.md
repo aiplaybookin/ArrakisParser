@@ -7,8 +7,9 @@ A high-accuracy PDF table parser that extracts tables with captions, contents, a
 - **AI-Powered Extraction**: Uses Gemini or Claude Sonnet APIs for accurate table detection
 - **Complete Table Data**: Extracts captions, table contents, and footnotes
 - **Multi-Page Support**: Automatically merges tables that span multiple pages
-- **Structure Preservation**: Maintains merged cells, column alignments, and table structure
-- **Multiple Output Formats**: JSON (with HTML tables) or Markdown output
+- **Structure Preservation**: Maintains merged cells, column alignments, and table structure with proper HTML
+- **HTML Output**: Tables extracted directly as HTML with support for superscripts, subscripts, and chemical formulas
+- **JSON Format**: Clean JSON output with HTML table content
 - **Performance Tracking**: Records time taken and tokens used per table
 - **No External Dependencies**: Uses PyMuPDF (no poppler required)
 
@@ -30,14 +31,11 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ## Usage
 
 ```bash
-# Using Gemini API with JSON output (default)
+# Using Gemini API
 python main.py --pdf input.pdf --api gemini --output-dir output/
 
-# Using Claude Sonnet API with markdown output
-python main.py --pdf input.pdf --api sonnet --output-format markdown
-
-# Generate both JSON and markdown
-python main.py --pdf input.pdf --api gemini --output-format both
+# Using Claude Sonnet API
+python main.py --pdf input.pdf --api sonnet --output-dir output/
 
 # With custom DPI for image conversion
 python main.py --pdf input.pdf --api gemini --dpi 300
@@ -48,16 +46,13 @@ python main.py --pdf input.pdf --api gemini --dpi 300
 - `main.py`: CLI entry point
 - `pdf_converter.py`: PDF to image conversion (using PyMuPDF)
 - `api_clients/`: API client implementations
-  - `gemini_client.py`: Google Gemini API
-  - `sonnet_client.py`: Anthropic Claude API
-- `table_extractor.py`: Table extraction and merging logic
-- `json_generator.py`: JSON output with HTML tables
-- `markdown_generator.py`: Markdown output generation
-- `html_converter.py`: Markdown to HTML table conversion
+  - `gemini_client.py`: Google Gemini API with HTML table extraction
+  - `sonnet_client.py`: Anthropic Claude API with HTML table extraction
+- `table_extractor.py`: HTML table extraction and merging logic
+- `json_generator.py`: JSON output generation
 
-## Output Formats
+## Output Format
 
-### JSON Output (Default)
 Each table is saved as a separate JSON file: `table_1_page_3.json`
 
 JSON structure:
@@ -67,19 +62,18 @@ JSON structure:
   "page": 3,
   "page_range": "3",
   "caption": "Table caption text",
-  "content": "<table>...</table>",
+  "content": "<table>\n  <thead>\n    <tr>\n      <th>Header</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>H<sub>2</sub>O</td>\n    </tr>\n  </tbody>\n</table>",
   "footnotes": "Footnote text",
   "time_taken": 2.5,
   "tokens_used": 1250
 }
 ```
 
-A `summary.json` file is also generated with all tables and totals.
+**HTML Content Features:**
+- Proper table structure with `<thead>` and `<tbody>`
+- Merged cells using `rowspan` and `colspan`
+- Superscripts: `<sup>` for exponents (e.g., m<sup>2</sup>)
+- Subscripts: `<sub>` for chemical formulas (e.g., H<sub>2</sub>O, CO<sub>2</sub>)
+- Special characters properly escaped
 
-### Markdown Output
-Each table is saved as: `table_1_page_3.md`
-
-Contains:
-- Table caption (if available)
-- Table contents in markdown format
-- Table footnotes (if available)
+A `summary.json` file is also generated with all tables and aggregate statistics.

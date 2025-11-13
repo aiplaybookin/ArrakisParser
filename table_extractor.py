@@ -118,7 +118,7 @@ class TableExtractor:
 
     def _merge_two_tables(self, table1: Dict[str, Any], table2: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Merge two consecutive tables.
+        Merge two consecutive HTML tables.
 
         Args:
             table1: First table
@@ -127,27 +127,32 @@ class TableExtractor:
         Returns:
             Merged table
         """
-        # Parse table contents
+        import re
+
+        # Parse HTML table contents
         content1 = table1.get('content', '').strip()
         content2 = table2.get('content', '').strip()
 
-        lines1 = content1.split('\n')
-        lines2 = content2.split('\n')
+        # Extract tbody content from first table (keep everything including </tbody></table>)
+        # Find the closing </tbody> tag position
+        tbody1_end = content1.rfind('</tbody>')
+        if tbody1_end == -1:
+            # No tbody tags, try to merge as-is
+            merged_content = content1
+        else:
+            # Get content before </tbody></table>
+            table1_base = content1[:tbody1_end]
 
-        # Remove separator line from first table if present
-        if len(lines1) >= 2 and '---' in lines1[-1]:
-            lines1 = lines1[:-1]
-
-        # Skip header and separator from continuation table
-        if len(lines2) >= 3:
-            # Typically: header | separator | data...
-            # We want to skip header and separator, keep only data
-            lines2 = lines2[2:]
-        elif len(lines2) >= 2:
-            lines2 = lines2[1:]
-
-        # Merge content
-        merged_content = '\n'.join(lines1 + lines2)
+            # Extract tbody rows from second table (skip thead if present)
+            # Find tbody opening and extract its content
+            tbody2_match = re.search(r'<tbody>(.*?)</tbody>', content2, re.DOTALL)
+            if tbody2_match:
+                tbody2_rows = tbody2_match.group(1)
+                # Append the continuation rows to first table's tbody
+                merged_content = table1_base + tbody2_rows + '\n  </tbody>\n</table>'
+            else:
+                # No tbody in continuation, use table1 as-is
+                merged_content = content1
 
         # Create merged table
         merged_table = {

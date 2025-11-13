@@ -20,17 +20,25 @@ class GeminiClient(BaseAPIClient):
 
 For each table found, provide:
 1. **Caption**: The table's title or caption (usually appears above the table). If no caption exists, return null.
-2. **Content**: The complete table content in markdown format. Preserve:
-   - All rows and columns
-   - Merged cells (use appropriate markdown or describe in content)
+2. **Content**: The complete table content in HTML format. Preserve:
+   - All rows and columns exactly as they appear
+   - Merged cells using rowspan and colspan attributes
    - Column alignments
-   - Header rows
-   - All data accurately
+   - Header rows using <thead> and <th> tags
+   - Body rows using <tbody> and <td> tags
+   - **Special formatting**: Use proper HTML entities for:
+     * Superscripts: <sup>text</sup> (e.g., m<sup>2</sup>, 10<sup>-3</sup>)
+     * Subscripts: <sub>text</sub> (e.g., H<sub>2</sub>O, CO<sub>2</sub>)
+     * Chemical formulas: preserve subscripts/superscripts (e.g., H<sub>2</sub>SO<sub>4</sub>)
+     * Greek letters and special symbols using HTML entities
+   - All data accurately with proper HTML escaping
 3. **Footnotes**: Any footnotes, notes, or references associated with this table (usually appear below the table). If none exist, return null.
 
-IMPORTANT:
+CRITICAL REQUIREMENTS:
 - If a table appears to be cut off at the bottom of the page (incomplete rows, continuation markers like "continued...", etc.), note this in a special field 'is_continued': true
 - Preserve exact structure and content - accuracy is critical
+- Use proper HTML table structure with <table>, <thead>, <tbody>, <tr>, <th>, <td> tags
+- Pay special attention to scientific notation, chemical formulas, and mathematical expressions
 - Return data in JSON format
 
 Return format:
@@ -38,7 +46,7 @@ Return format:
   "tables": [
     {
       "caption": "Table caption text or null",
-      "content": "| Header 1 | Header 2 |\\n|----------|----------|\\n| Data 1   | Data 2   |",
+      "content": "<table>\\n  <thead>\\n    <tr>\\n      <th>Header 1</th>\\n      <th>Header 2</th>\\n    </tr>\\n  </thead>\\n  <tbody>\\n    <tr>\\n      <td>Data 1</td>\\n      <td>Data 2</td>\\n    </tr>\\n  </tbody>\\n</table>",
       "footnotes": "Footnote text or null",
       "is_continued": false
     }
@@ -141,6 +149,8 @@ If no tables are found, return: {"tables": []}
         Returns:
             True if curr_table continues prev_table
         """
+        import re
+
         # Check if previous table is marked as continued
         if not prev_table.get('is_continued', False):
             return False
@@ -149,23 +159,16 @@ If no tables are found, return: {"tables": []}
         if curr_table.get('caption'):
             return False
 
-        # Additional heuristic: compare column structure
+        # Additional heuristic: compare column structure (HTML tables)
         prev_content = prev_table.get('content', '')
         curr_content = curr_table.get('content', '')
 
         if not prev_content or not curr_content:
             return False
 
-        # Extract header rows (first line after splitting)
-        prev_lines = prev_content.strip().split('\n')
-        curr_lines = curr_content.strip().split('\n')
-
-        if len(prev_lines) < 2 or len(curr_lines) < 2:
-            return False
-
-        # Compare column count (number of | separators)
-        prev_cols = prev_lines[0].count('|')
-        curr_cols = curr_lines[0].count('|')
+        # Count number of <th> or <td> tags in first row to determine columns
+        prev_cols = len(re.findall(r'<th[^>]*>|<td[^>]*>', prev_content.split('</tr>')[0] if '</tr>' in prev_content else prev_content))
+        curr_cols = len(re.findall(r'<th[^>]*>|<td[^>]*>', curr_content.split('</tr>')[0] if '</tr>' in curr_content else curr_content))
 
         # If column counts match and previous is marked as continued, it's likely a continuation
-        return prev_cols == curr_cols
+        return prev_cols == curr_cols and prev_cols > 0

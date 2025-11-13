@@ -7,7 +7,6 @@ Generates JSON output files for extracted tables with HTML content.
 import os
 import json
 from typing import Dict, Any, List
-from html_converter import HTMLConverter
 
 
 class JSONGenerator:
@@ -21,7 +20,6 @@ class JSONGenerator:
             output_dir: Directory to save JSON files
         """
         self.output_dir = output_dir
-        self.html_converter = HTMLConverter()
         os.makedirs(output_dir, exist_ok=True)
 
     def generate_json_file(self, table: Dict[str, Any]) -> str:
@@ -42,9 +40,8 @@ class JSONGenerator:
         filename = f"table_{table_num}_page_{page_range}.json"
         filepath = os.path.join(self.output_dir, filename)
 
-        # Convert markdown table to HTML
-        markdown_content = table.get('content', '')
-        html_content = self.html_converter.markdown_table_to_html(markdown_content)
+        # Get HTML content directly (already in HTML format from API)
+        html_content = table.get('content', '')
 
         # Build JSON structure
         json_data = {
@@ -102,8 +99,8 @@ class JSONGenerator:
         # Build summary data
         tables_summary = []
         for table in tables:
-            markdown_content = table.get('content', '')
-            html_content = self.html_converter.markdown_table_to_html(markdown_content)
+            # Get HTML content directly (already in HTML format from API)
+            html_content = table.get('content', '')
 
             table_summary = {
                 "table_number": table.get('table_number', 0),

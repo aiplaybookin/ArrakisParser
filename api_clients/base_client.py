@@ -27,7 +27,7 @@ class BaseAPIClient(ABC):
                 'tables': [
                     {
                         'caption': str or None,
-                        'content': str (markdown table),
+                        'content': str (HTML table),
                         'footnotes': str or None,
                         'page': int
                     },
