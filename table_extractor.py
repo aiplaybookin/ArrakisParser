@@ -21,7 +21,7 @@ class TableExtractor:
         """
         self.api_client = api_client
 
-    def extract_all_tables(self, images: List[Image.Image]) -> List[Dict[str, Any]]:
+    def extract_all_tables(self, images: List[Image.Image]) -> tuple[List[Dict[str, Any]], float, int]:
         """
         Extract all tables from PDF pages.
 
@@ -29,26 +29,37 @@ class TableExtractor:
             images: List of PDF page images
 
         Returns:
-            List of extracted and merged tables
+            Tuple of (list of extracted and merged tables, total time taken, total tokens used)
         """
         all_tables = []
+        total_time = 0
+        total_tokens = 0
 
         # Extract tables from each page
         for page_num, image in enumerate(images, start=1):
             result = self.api_client.extract_tables_from_image(image, page_num)
             page_tables = result.get('tables', [])
+            page_time = result.get('time_taken', 0)
+            page_tokens = result.get('tokens_used', 0)
 
+            total_time += page_time
+            total_tokens += page_tokens
+
+            # Add timing and token info to each table
             for table in page_tables:
+                table['time_taken'] = page_time
+                table['tokens_used'] = page_tokens
                 all_tables.append(table)
 
         print(f"\nTotal tables extracted (before merging): {len(all_tables)}")
+        print(f"Total time: {total_time:.2f}s, Total tokens: {total_tokens}")
 
         # Merge tables that continue across pages
         merged_tables = self._merge_continued_tables(all_tables)
 
         print(f"Total tables after merging: {len(merged_tables)}")
 
-        return merged_tables
+        return merged_tables, total_time, total_tokens
 
     def _merge_continued_tables(self, tables: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -145,7 +156,9 @@ class TableExtractor:
             'footnotes': table2.get('footnotes') or table1.get('footnotes'),  # Prefer footnotes from last table
             'page': table1.get('page'),  # Keep original page
             'page_range': f"{table1.get('page')}-{table2.get('page')}",  # Track page range
-            'is_continued': table2.get('is_continued', False)  # Check if still continued
+            'is_continued': table2.get('is_continued', False),  # Check if still continued
+            'time_taken': table1.get('time_taken', 0) + table2.get('time_taken', 0),  # Sum time
+            'tokens_used': table1.get('tokens_used', 0) + table2.get('tokens_used', 0)  # Sum tokens
         }
 
         return merged_table

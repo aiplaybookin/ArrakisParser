@@ -15,6 +15,7 @@ from api_clients.gemini_client import GeminiClient
 from api_clients.sonnet_client import SonnetClient
 from table_extractor import TableExtractor
 from markdown_generator import MarkdownGenerator
+from json_generator import JSONGenerator
 
 
 def parse_arguments():
@@ -24,11 +25,14 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Using Gemini API
+  # Using Gemini API with JSON output (default)
   python main.py --pdf document.pdf --api gemini --output-dir output/
 
-  # Using Claude Sonnet API
-  python main.py --pdf document.pdf --api sonnet --output-dir output/
+  # Using Claude Sonnet API with markdown output
+  python main.py --pdf document.pdf --api sonnet --output-format markdown
+
+  # Generate both JSON and markdown
+  python main.py --pdf document.pdf --api gemini --output-format both
 
   # With custom DPI
   python main.py --pdf document.pdf --api gemini --dpi 300
@@ -54,7 +58,15 @@ Examples:
         '--output-dir',
         type=str,
         default='output',
-        help='Directory to save markdown files (default: output/)'
+        help='Directory to save output files (default: output/)'
+    )
+
+    parser.add_argument(
+        '--output-format',
+        type=str,
+        choices=['markdown', 'json', 'both'],
+        default='json',
+        help='Output format: markdown, json, or both (default: json)'
     )
 
     parser.add_argument(
@@ -104,6 +116,7 @@ def main():
     print(f"PDF: {args.pdf}")
     print(f"API: {args.api}")
     print(f"Output: {args.output_dir}")
+    print(f"Format: {args.output_format}")
     print(f"DPI: {args.dpi}")
     print("=" * 60)
 
@@ -123,7 +136,7 @@ def main():
         # Step 3: Extract and merge tables
         print("\n[3/4] Extracting tables from PDF...")
         extractor = TableExtractor(api_client)
-        tables = extractor.extract_all_tables(images)
+        tables, total_time, total_tokens = extractor.extract_all_tables(images)
 
         if not tables:
             print("\nNo tables found in the PDF.")
@@ -132,21 +145,29 @@ def main():
         # Number the tables
         tables = extractor.number_tables(tables)
 
-        # Step 4: Generate markdown files
-        print("\n[4/4] Generating markdown files...")
-        generator = MarkdownGenerator(args.output_dir)
-        filepaths = generator.generate_all_markdown_files(tables)
+        # Step 4: Generate output files
+        print(f"\n[4/4] Generating {args.output_format} output...")
 
-        # Generate index
-        if not args.no_index:
-            generator.generate_index(tables)
+        if args.output_format in ['markdown', 'both']:
+            md_generator = MarkdownGenerator(args.output_dir)
+            md_generator.generate_all_markdown_files(tables)
+            if not args.no_index:
+                md_generator.generate_index(tables)
+
+        if args.output_format in ['json', 'both']:
+            json_generator = JSONGenerator(args.output_dir)
+            json_generator.generate_all_json_files(tables)
+            json_generator.generate_summary(tables, total_time, total_tokens)
 
         # Success summary
         print("\n" + "=" * 60)
         print("SUCCESS!")
         print("=" * 60)
         print(f"Extracted {len(tables)} table(s)")
+        print(f"Total time: {total_time:.2f}s")
+        print(f"Total tokens: {total_tokens}")
         print(f"Output directory: {args.output_dir}")
+        print(f"Output format: {args.output_format}")
         print("=" * 60)
 
     except KeyboardInterrupt:

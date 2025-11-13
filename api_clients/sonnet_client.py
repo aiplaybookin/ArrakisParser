@@ -8,6 +8,7 @@ import os
 import json
 import base64
 import io
+import time
 from typing import Dict, Any
 from PIL import Image
 from anthropic import Anthropic
@@ -80,8 +81,11 @@ If no tables are found, return: {"tables": []}
             page_number: Page number in the PDF
 
         Returns:
-            Dictionary containing extracted tables
+            Dictionary containing extracted tables, tokens used, and time taken
         """
+        start_time = time.time()
+        tokens_used = 0
+
         try:
             print(f"Analyzing page {page_number} with Claude Sonnet...")
 
@@ -113,6 +117,13 @@ If no tables are found, return: {"tables": []}
                 ],
             )
 
+            # Extract token usage
+            try:
+                if hasattr(message, 'usage'):
+                    tokens_used = message.usage.input_tokens + message.usage.output_tokens
+            except Exception:
+                tokens_used = 0
+
             # Extract response text
             response_text = message.content[0].text.strip()
 
@@ -132,17 +143,26 @@ If no tables are found, return: {"tables": []}
             for table in result.get('tables', []):
                 table['page'] = page_number
 
+            time_taken = time.time() - start_time
+
             print(f"Found {len(result.get('tables', []))} table(s) on page {page_number}")
+            print(f"Tokens used: {tokens_used}, Time taken: {time_taken:.2f}s")
+
+            # Add metadata
+            result['tokens_used'] = tokens_used
+            result['time_taken'] = time_taken
 
             return result
 
         except json.JSONDecodeError as e:
+            time_taken = time.time() - start_time
             print(f"Error parsing JSON response: {e}")
             print(f"Response: {message.content[0].text}")
-            return {'tables': []}
+            return {'tables': [], 'tokens_used': tokens_used, 'time_taken': time_taken}
         except Exception as e:
+            time_taken = time.time() - start_time
             print(f"Error analyzing page {page_number}: {e}")
-            return {'tables': []}
+            return {'tables': [], 'tokens_used': tokens_used, 'time_taken': time_taken}
 
     def is_table_continuation(self, prev_table: Dict[str, Any], curr_table: Dict[str, Any]) -> bool:
         """

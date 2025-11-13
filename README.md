@@ -8,7 +8,8 @@ A high-accuracy PDF table parser that extracts tables with captions, contents, a
 - **Complete Table Data**: Extracts captions, table contents, and footnotes
 - **Multi-Page Support**: Automatically merges tables that span multiple pages
 - **Structure Preservation**: Maintains merged cells, column alignments, and table structure
-- **Markdown Output**: Generates clean markdown files for each table
+- **Multiple Output Formats**: JSON (with HTML tables) or Markdown output
+- **Performance Tracking**: Records time taken and tokens used per table
 - **No External Dependencies**: Uses PyMuPDF (no poppler required)
 
 ## Installation
@@ -29,11 +30,14 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ## Usage
 
 ```bash
-# Using Gemini API
+# Using Gemini API with JSON output (default)
 python main.py --pdf input.pdf --api gemini --output-dir output/
 
-# Using Claude Sonnet API
-python main.py --pdf input.pdf --api sonnet --output-dir output/
+# Using Claude Sonnet API with markdown output
+python main.py --pdf input.pdf --api sonnet --output-format markdown
+
+# Generate both JSON and markdown
+python main.py --pdf input.pdf --api gemini --output-format both
 
 # With custom DPI for image conversion
 python main.py --pdf input.pdf --api gemini --dpi 300
@@ -47,14 +51,35 @@ python main.py --pdf input.pdf --api gemini --dpi 300
   - `gemini_client.py`: Google Gemini API
   - `sonnet_client.py`: Anthropic Claude API
 - `table_extractor.py`: Table extraction and merging logic
+- `json_generator.py`: JSON output with HTML tables
 - `markdown_generator.py`: Markdown output generation
+- `html_converter.py`: Markdown to HTML table conversion
 
-## Output Format
+## Output Formats
 
-Each table is saved as a separate markdown file with naming convention:
-`table_1_page_3.md`, `table_2_page_5.md`, etc.
+### JSON Output (Default)
+Each table is saved as a separate JSON file: `table_1_page_3.json`
 
-Each file contains:
+JSON structure:
+```json
+{
+  "table_number": 1,
+  "page": 3,
+  "page_range": "3",
+  "caption": "Table caption text",
+  "content": "<table>...</table>",
+  "footnotes": "Footnote text",
+  "time_taken": 2.5,
+  "tokens_used": 1250
+}
+```
+
+A `summary.json` file is also generated with all tables and totals.
+
+### Markdown Output
+Each table is saved as: `table_1_page_3.md`
+
+Contains:
 - Table caption (if available)
 - Table contents in markdown format
 - Table footnotes (if available)

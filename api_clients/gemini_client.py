@@ -6,6 +6,7 @@ Uses Google's Gemini vision model to extract tables from PDF pages.
 
 import os
 import json
+import time
 from typing import Dict, Any
 from PIL import Image
 import google.generativeai as genai
@@ -71,13 +72,23 @@ If no tables are found, return: {"tables": []}
             page_number: Page number in the PDF
 
         Returns:
-            Dictionary containing extracted tables
+            Dictionary containing extracted tables, tokens used, and time taken
         """
+        start_time = time.time()
+        tokens_used = 0
+
         try:
             print(f"Analyzing page {page_number} with Gemini...")
 
             # Generate content from image
             response = self.model.generate_content([self.EXTRACTION_PROMPT, image])
+
+            # Extract token usage
+            try:
+                if hasattr(response, 'usage_metadata'):
+                    tokens_used = response.usage_metadata.total_token_count
+            except Exception:
+                tokens_used = 0
 
             # Parse response
             response_text = response.text.strip()
@@ -98,17 +109,26 @@ If no tables are found, return: {"tables": []}
             for table in result.get('tables', []):
                 table['page'] = page_number
 
+            time_taken = time.time() - start_time
+
             print(f"Found {len(result.get('tables', []))} table(s) on page {page_number}")
+            print(f"Tokens used: {tokens_used}, Time taken: {time_taken:.2f}s")
+
+            # Add metadata
+            result['tokens_used'] = tokens_used
+            result['time_taken'] = time_taken
 
             return result
 
         except json.JSONDecodeError as e:
+            time_taken = time.time() - start_time
             print(f"Error parsing JSON response: {e}")
             print(f"Response: {response.text}")
-            return {'tables': []}
+            return {'tables': [], 'tokens_used': tokens_used, 'time_taken': time_taken}
         except Exception as e:
+            time_taken = time.time() - start_time
             print(f"Error analyzing page {page_number}: {e}")
-            return {'tables': []}
+            return {'tables': [], 'tokens_used': tokens_used, 'time_taken': time_taken}
 
     def is_table_continuation(self, prev_table: Dict[str, Any], curr_table: Dict[str, Any]) -> bool:
         """

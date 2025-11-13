@@ -30,7 +30,7 @@
 
 ## Basic Usage
 
-### Using Gemini API
+### Using Gemini API (JSON output by default)
 
 ```bash
 python main.py --pdf document.pdf --api gemini --output-dir output/
@@ -40,6 +40,19 @@ python main.py --pdf document.pdf --api gemini --output-dir output/
 
 ```bash
 python main.py --pdf document.pdf --api sonnet --output-dir output/
+```
+
+### Specify Output Format
+
+```bash
+# JSON output (default) - includes HTML tables and performance metrics
+python main.py --pdf document.pdf --api gemini --output-format json
+
+# Markdown output
+python main.py --pdf document.pdf --api gemini --output-format markdown
+
+# Both JSON and Markdown
+python main.py --pdf document.pdf --api gemini --output-format both
 ```
 
 ## Advanced Options
@@ -76,14 +89,53 @@ python main.py --pdf document.pdf --api sonnet --sonnet-key YOUR_KEY
 python main.py --pdf document.pdf --api gemini --no-index
 ```
 
-## Output Format
+## Output Formats
+
+### JSON Output (Default)
+
+The parser generates:
+
+1. **Individual table files**: `table_N_page_X.json` or `table_N_page_X-Y.json` (for multi-page tables)
+2. **Summary file**: `summary.json` with all tables and aggregate statistics
+
+#### Example JSON File Structure
+
+```json
+{
+  "table_number": 1,
+  "page": 3,
+  "page_range": "3",
+  "caption": "Table 1: Sample data showing quarterly results",
+  "content": "<table>\n  <thead>\n    <tr>\n      <th>Quarter</th>\n      <th>Revenue</th>\n      <th>Expenses</th>\n      <th>Profit</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Q1</td>\n      <td>$100K</td>\n      <td>$60K</td>\n      <td>$40K</td>\n    </tr>\n    <tr>\n      <td>Q2</td>\n      <td>$120K</td>\n      <td>$65K</td>\n      <td>$55K</td>\n    </tr>\n  </tbody>\n</table>",
+  "footnotes": "Revenue figures are in USD thousands. Expenses include operational costs only.",
+  "time_taken": 2.5,
+  "tokens_used": 1250
+}
+```
+
+#### Summary File Structure
+
+```json
+{
+  "total_tables": 5,
+  "total_time_taken": 12.5,
+  "total_tokens_used": 6250,
+  "tables": [
+    { /* table 1 data */ },
+    { /* table 2 data */ },
+    ...
+  ]
+}
+```
+
+### Markdown Output
 
 The parser generates:
 
 1. **Individual table files**: `table_N_page_X.md` or `table_N_page_X-Y.md` (for multi-page tables)
 2. **Index file**: `index.md` (unless --no-index is used)
 
-### Example Table File Structure
+#### Example Markdown File Structure
 
 ```markdown
 # Table 1

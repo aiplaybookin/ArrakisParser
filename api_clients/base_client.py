@@ -32,7 +32,9 @@ class BaseAPIClient(ABC):
                         'page': int
                     },
                     ...
-                ]
+                ],
+                'tokens_used': int,
+                'time_taken': float (seconds)
             }
         """
         pass
