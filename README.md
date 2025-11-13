@@ -9,6 +9,7 @@ A high-accuracy PDF table parser that extracts tables with captions, contents, a
 - **Multi-Page Support**: Automatically merges tables that span multiple pages
 - **Structure Preservation**: Maintains merged cells, column alignments, and table structure
 - **Markdown Output**: Generates clean markdown files for each table
+- **No External Dependencies**: Uses PyMuPDF (no poppler required)
 
 ## Installation
 
@@ -41,8 +42,10 @@ python main.py --pdf input.pdf --api gemini --dpi 300
 ## Architecture
 
 - `main.py`: CLI entry point
-- `pdf_converter.py`: PDF to image conversion
+- `pdf_converter.py`: PDF to image conversion (using PyMuPDF)
 - `api_clients/`: API client implementations
+  - `gemini_client.py`: Google Gemini API
+  - `sonnet_client.py`: Anthropic Claude API
 - `table_extractor.py`: Table extraction and merging logic
 - `markdown_generator.py`: Markdown output generation
 

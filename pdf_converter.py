@@ -2,11 +2,12 @@
 PDF to Image Converter Module
 
 Converts PDF pages to images for processing by AI vision models.
+Uses PyMuPDF (fitz) which doesn't require external dependencies like poppler.
 """
 
 import os
 from typing import List
-from pdf2image import convert_from_path
+import fitz  # PyMuPDF
 from PIL import Image
 import io
 import base64
@@ -23,10 +24,12 @@ class PDFConverter:
             dpi: Resolution for image conversion (default: 200)
         """
         self.dpi = dpi
+        # PyMuPDF uses zoom factor, calculate from DPI (72 is default PDF DPI)
+        self.zoom = dpi / 72.0
 
     def convert_pdf_to_images(self, pdf_path: str) -> List[Image.Image]:
         """
-        Convert all pages of a PDF to images.
+        Convert all pages of a PDF to images using PyMuPDF.
 
         Args:
             pdf_path: Path to the PDF file
@@ -38,9 +41,33 @@ class PDFConverter:
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
         print(f"Converting PDF to images (DPI: {self.dpi})...")
-        images = convert_from_path(pdf_path, dpi=self.dpi)
-        print(f"Converted {len(images)} pages")
 
+        images = []
+
+        # Open the PDF
+        pdf_document = fitz.open(pdf_path)
+
+        try:
+            # Convert each page to an image
+            for page_num in range(len(pdf_document)):
+                page = pdf_document[page_num]
+
+                # Create a transformation matrix for the desired DPI
+                mat = fitz.Matrix(self.zoom, self.zoom)
+
+                # Render page to a pixmap
+                pix = page.get_pixmap(matrix=mat)
+
+                # Convert pixmap to PIL Image
+                img_data = pix.tobytes("png")
+                img = Image.open(io.BytesIO(img_data))
+
+                images.append(img)
+
+        finally:
+            pdf_document.close()
+
+        print(f"Converted {len(images)} pages")
         return images
 
     def image_to_base64(self, image: Image.Image, format: str = "PNG") -> str:

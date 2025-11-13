@@ -13,22 +13,9 @@
    pip install -r requirements.txt
    ```
 
-3. **Install system dependencies** (for pdf2image)
+   Note: This project uses PyMuPDF which doesn't require external dependencies like poppler.
 
-   On Ubuntu/Debian:
-   ```bash
-   sudo apt-get install poppler-utils
-   ```
-
-   On macOS:
-   ```bash
-   brew install poppler
-   ```
-
-   On Windows:
-   Download and install poppler from: http://blog.alivate.com.au/poppler-windows/
-
-4. **Configure API keys**
+3. **Configure API keys**
 
    Copy the example environment file:
    ```bash
