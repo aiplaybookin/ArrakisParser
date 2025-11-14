@@ -4,13 +4,14 @@ A high-accuracy PDF table parser that extracts tables with captions, contents, a
 
 ## Features
 
-- **AI-Powered Extraction**: Uses Gemini or Claude Sonnet APIs for accurate table detection
+- **AI-Powered Extraction**: Uses Gemini or Claude Sonnet APIs for accurate table detection with row-by-row verification
 - **Complete Table Data**: Extracts captions, table contents, and footnotes
 - **Multi-Page Support**: Automatically merges tables that span multiple pages
 - **Structure Preservation**: Maintains merged cells, column alignments, and table structure with proper HTML
 - **HTML Output**: Tables extracted directly as HTML with support for superscripts, subscripts, and chemical formulas
 - **JSON Format**: Clean JSON output with HTML table content
-- **Performance Tracking**: Records time taken and tokens used per table
+- **Performance Tracking**: Records time taken and detailed token usage (input/output tokens) per table
+- **Enhanced Accuracy**: 4-step extraction process with explicit row-by-row verification to prevent misalignment
 - **No External Dependencies**: Uses PyMuPDF (no poppler required)
 
 ## Installation
@@ -65,6 +66,8 @@ JSON structure:
   "content": "<table>\n  <thead>\n    <tr>\n      <th>Header</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>H<sub>2</sub>O</td>\n    </tr>\n  </tbody>\n</table>",
   "footnotes": "Footnote text",
   "time_taken": 2.5,
+  "input_tokens": 850,
+  "output_tokens": 400,
   "tokens_used": 1250
 }
 ```

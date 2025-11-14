@@ -123,7 +123,7 @@ def main():
         # Step 3: Extract and merge tables
         print("\n[3/4] Extracting tables from PDF...")
         extractor = TableExtractor(api_client)
-        tables, total_time, total_tokens = extractor.extract_all_tables(images)
+        tables, total_time, total_tokens, total_input_tokens, total_output_tokens = extractor.extract_all_tables(images)
 
         if not tables:
             print("\nNo tables found in the PDF.")
@@ -136,7 +136,7 @@ def main():
         print("\n[4/4] Generating JSON output...")
         json_generator = JSONGenerator(args.output_dir)
         json_generator.generate_all_json_files(tables)
-        json_generator.generate_summary(tables, total_time, total_tokens)
+        json_generator.generate_summary(tables, total_time, total_tokens, total_input_tokens, total_output_tokens)
 
         # Success summary
         print("\n" + "=" * 60)
@@ -145,6 +145,8 @@ def main():
         print(f"Extracted {len(tables)} table(s)")
         print(f"Total time: {total_time:.2f}s")
         print(f"Total tokens: {total_tokens}")
+        print(f"  - Input tokens: {total_input_tokens}")
+        print(f"  - Output tokens: {total_output_tokens}")
         print(f"Output directory: {args.output_dir}")
         print("=" * 60)
 

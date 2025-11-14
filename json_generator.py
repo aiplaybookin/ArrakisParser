@@ -52,6 +52,8 @@ class JSONGenerator:
             "content": html_content,
             "footnotes": table.get('footnotes'),
             "time_taken": table.get('time_taken', 0),
+            "input_tokens": table.get('input_tokens', 0),
+            "output_tokens": table.get('output_tokens', 0),
             "tokens_used": table.get('tokens_used', 0)
         }
 
@@ -82,7 +84,8 @@ class JSONGenerator:
         print(f"\nGenerated {len(filepaths)} JSON file(s)")
         return filepaths
 
-    def generate_summary(self, tables: List[Dict[str, Any]], total_time: float, total_tokens: int) -> str:
+    def generate_summary(self, tables: List[Dict[str, Any]], total_time: float, total_tokens: int,
+                        total_input_tokens: int, total_output_tokens: int) -> str:
         """
         Generate a summary JSON file with all tables.
 
@@ -110,6 +113,8 @@ class JSONGenerator:
                 "content": html_content,
                 "footnotes": table.get('footnotes'),
                 "time_taken": table.get('time_taken', 0),
+                "input_tokens": table.get('input_tokens', 0),
+                "output_tokens": table.get('output_tokens', 0),
                 "tokens_used": table.get('tokens_used', 0)
             }
             tables_summary.append(table_summary)
@@ -117,6 +122,8 @@ class JSONGenerator:
         summary = {
             "total_tables": len(tables),
             "total_time_taken": total_time,
+            "total_input_tokens": total_input_tokens,
+            "total_output_tokens": total_output_tokens,
             "total_tokens_used": total_tokens,
             "tables": tables_summary
         }

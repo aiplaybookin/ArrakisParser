@@ -34,6 +34,8 @@ class TableExtractor:
         all_tables = []
         total_time = 0
         total_tokens = 0
+        total_input_tokens = 0
+        total_output_tokens = 0
 
         # Extract tables from each page
         for page_num, image in enumerate(images, start=1):
@@ -41,25 +43,32 @@ class TableExtractor:
             page_tables = result.get('tables', [])
             page_time = result.get('time_taken', 0)
             page_tokens = result.get('tokens_used', 0)
+            page_input_tokens = result.get('input_tokens', 0)
+            page_output_tokens = result.get('output_tokens', 0)
 
             total_time += page_time
             total_tokens += page_tokens
+            total_input_tokens += page_input_tokens
+            total_output_tokens += page_output_tokens
 
             # Add timing and token info to each table
             for table in page_tables:
                 table['time_taken'] = page_time
                 table['tokens_used'] = page_tokens
+                table['input_tokens'] = page_input_tokens
+                table['output_tokens'] = page_output_tokens
                 all_tables.append(table)
 
         print(f"\nTotal tables extracted (before merging): {len(all_tables)}")
-        print(f"Total time: {total_time:.2f}s, Total tokens: {total_tokens}")
+        print(f"Total time: {total_time:.2f}s")
+        print(f"Total tokens: {total_tokens} (Input: {total_input_tokens}, Output: {total_output_tokens})")
 
         # Merge tables that continue across pages
         merged_tables = self._merge_continued_tables(all_tables)
 
         print(f"Total tables after merging: {len(merged_tables)}")
 
-        return merged_tables, total_time, total_tokens
+        return merged_tables, total_time, total_tokens, total_input_tokens, total_output_tokens
 
     def _merge_continued_tables(self, tables: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -163,7 +172,9 @@ class TableExtractor:
             'page_range': f"{table1.get('page')}-{table2.get('page')}",  # Track page range
             'is_continued': table2.get('is_continued', False),  # Check if still continued
             'time_taken': table1.get('time_taken', 0) + table2.get('time_taken', 0),  # Sum time
-            'tokens_used': table1.get('tokens_used', 0) + table2.get('tokens_used', 0)  # Sum tokens
+            'tokens_used': table1.get('tokens_used', 0) + table2.get('tokens_used', 0),  # Sum tokens
+            'input_tokens': table1.get('input_tokens', 0) + table2.get('input_tokens', 0),  # Sum input tokens
+            'output_tokens': table1.get('output_tokens', 0) + table2.get('output_tokens', 0)  # Sum output tokens
         }
 
         return merged_table

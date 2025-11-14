@@ -72,10 +72,11 @@ python main.py --pdf document.pdf --api sonnet --sonnet-key YOUR_KEY
 
 ## Output Format
 
-The parser generates JSON output with HTML tables:
+The parser generates JSON output with HTML tables using an enhanced 4-step extraction process with row-by-row verification for maximum accuracy:
 
 1. **Individual table files**: `table_N_page_X.json` or `table_N_page_X-Y.json` (for multi-page tables)
 2. **Summary file**: `summary.json` with all tables and aggregate statistics
+3. **Token tracking**: Separate input and output token counts for detailed cost analysis
 
 ### Example JSON File Structure
 
@@ -88,6 +89,8 @@ The parser generates JSON output with HTML tables:
   "content": "<table>\n  <thead>\n    <tr>\n      <th>Quarter</th>\n      <th>Revenue</th>\n      <th>Expenses</th>\n      <th>Profit</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Q1</td>\n      <td>$100K</td>\n      <td>$60K</td>\n      <td>$40K</td>\n    </tr>\n    <tr>\n      <td>Q2</td>\n      <td>$120K</td>\n      <td>$65K</td>\n      <td>$55K</td>\n    </tr>\n  </tbody>\n</table>",
   "footnotes": "Revenue figures are in USD thousands. Expenses include operational costs only.",
   "time_taken": 2.5,
+  "input_tokens": 850,
+  "output_tokens": 400,
   "tokens_used": 1250
 }
 ```
@@ -109,6 +112,8 @@ The parser extracts tables directly as HTML with special support for:
 {
   "total_tables": 5,
   "total_time_taken": 12.5,
+  "total_input_tokens": 4250,
+  "total_output_tokens": 2000,
   "total_tokens_used": 6250,
   "tables": [
     { /* table 1 data */ },
@@ -130,12 +135,28 @@ The parser extracts tables directly as HTML with special support for:
 - **Pros**: High accuracy, excellent structure preservation
 - **Best for**: Complex tables, critical accuracy requirements
 
+## Enhanced Accuracy Features
+
+The parser uses a 4-step extraction process with explicit row-by-row verification:
+
+1. **Boundary Detection**: Identifies table start/end including caption and footnotes
+2. **Structure Analysis**: Determines column count, header rows, and merged cells
+3. **Row-by-Row Extraction**: Processes each row individually with column count verification
+4. **Accuracy Verification**: Reviews extracted data for misalignment before finalizing
+
+This approach ensures:
+- Correct column alignment across all rows
+- Proper handling of merged cells (rowspan/colspan)
+- Accurate preservation of superscripts and subscripts
+- Consistent table structure throughout
+
 ## Tips for Best Results
 
 1. **Use higher DPI (300)** for documents with small text or complex tables
 2. **Claude Sonnet** typically provides better accuracy for complex table structures
 3. **Gemini** is faster and more cost-effective for simpler tables
 4. Ensure good PDF quality - scanned documents should be high resolution
+5. **Token tracking** helps estimate costs - review input/output token usage in summary.json
 
 ## Troubleshooting
 
