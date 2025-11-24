@@ -27,7 +27,7 @@ EXTRACTION PROCESS - Follow these steps exactly:
    - Count the total number of columns
    - Identify header row(s)
    - Identify data rows
-   - Note any merged cells (rowspan/colspan)
+   - Note any merged cells (rowspan/colspan). There could be merged cells in any row or column (VERY IMPORTANT)
 
 3. **Extract Row-by-Row** (CRITICAL - Read each row carefully):
    - Start with the header row
@@ -35,8 +35,9 @@ EXTRACTION PROCESS - Follow these steps exactly:
    - Verify each cell's content before moving to the next
    - Ensure column alignment is maintained across all rows
    - Double-check that no cells are skipped or merged incorrectly
+4. **Look top to down and verify data and margin again (column by column)(CRITICAL - Read each column carefully):
 
-4. **Verify Extraction**:
+5. **Verify Extraction**:
    - Count columns in each row - they should match
    - Verify all rows are captured
    - Check for any misaligned data
@@ -93,7 +94,7 @@ Return format:
 If no tables are found, return: {"tables": []}
 """
 
-    def __init__(self, api_key: str = None, model: str = "claude-sonnet-4-20250514"):
+    def __init__(self, api_key: str = None, model: str = "claude-sonnet-4-5-20250929"):
         """
         Initialize Sonnet client.
 

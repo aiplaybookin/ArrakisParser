@@ -90,7 +90,7 @@ Return format:
 If no tables are found, return: {"tables": []}
 """
 
-    def __init__(self, api_key: str = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str = None, model: str = "gemini-2.5-pro"):
         """
         Initialize Gemini client.
 
